@@ -1,0 +1,13 @@
+{
+  "name": "whatsapp-pair-vercel",
+  "version": "1.0.0",
+  "description": "WhatsApp MD Pairing Code Server (Vercel)",
+  "main": "api/pair.js",
+  "scripts": {
+    "start": "node api/pair.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "express": "^4.19.2"
+  }
+}
