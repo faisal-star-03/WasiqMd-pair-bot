@@ -22,6 +22,9 @@
       --text-muted: #7f8c8d;
       --hover-dark: rgba(255,255,255,0.05);
       --border-glow: rgba(0,255,153,0.35);
+      --color-green: #2ecc71;
+      --color-yellow: #f1c40f;
+      --color-blue: #3498db;
     }
 
     /* ===== Base ===== */
@@ -88,6 +91,24 @@
       transition: all 0.3s ease;
     }
     .input-field:focus { outline:none; border-color: var(--neon-green); box-shadow: 0 0 12px var(--neon-green); }
+    
+    /* د شعار (placeholder) لپاره رنګونه */
+    .input-field::placeholder {
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+    
+    /* کله چې input په focus وي او شعار ښکاره شي */
+    .input-field:focus::placeholder {
+      color: #ffffff !important; /* سپین رنګ */
+      text-shadow: 0 0 5px #ffffff, 0 0 10px #ffff00 !important; /* سپین او ژېړ glow */
+    }
+    
+    /* د generate-btn په کلیک کې د placeholder رنګ بدلون */
+    .input-field.placeholder-highlight::placeholder {
+      color: #ffffff !important;
+      text-shadow: 0 0 5px #ffffff, 0 0 10px #ffff00 !important;
+    }
 
     .generate-btn, .copy-btn {
       width:100%; padding:12px; border:none; border-radius:12px;
@@ -99,19 +120,33 @@
 
     /* ===== Code Display ===== */
     .code-display {
-      background:#02030a; border-radius:12px; padding:14px; margin-bottom:16px;
+      background: linear-gradient(135deg, #2ecc71, #27ae60); /* زرغون رنګونه */
+      border-radius:12px; padding:14px; margin-bottom:16px;
       text-align:center; font-weight:600; font-size:16px;
-      border:1px solid rgba(0,255,153,0.3); box-shadow: inset 0 0 6px rgba(0,255,153,0.2);
+      border:1px solid rgba(0,255,153,0.3); 
+      box-shadow: 0 0 12px rgba(46, 204, 113, 0.4), inset 0 0 6px rgba(0,255,153,0.2);
       display:flex; justify-content:center; align-items:center;
+      color: white;
+      min-height: 60px;
     }
 
     /* ===== QR Display ===== */
     .qr-display {
-      background:#02030a; border-radius:12px; padding:20px; margin-bottom:16px;
-      text-align:center; border:1px solid rgba(0,255,153,0.2);
+      background: linear-gradient(135deg, #f1c40f, #f39c12); /* ژېړ رنګونه */
+      border-radius:12px; padding:20px; margin-bottom:16px;
+      text-align:center; 
+      border:1px solid rgba(241, 196, 15, 0.3);
+      box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
       display:none;
+      color: #333;
     }
-    .qr-image { max-width:280px; max-height:280px; border-radius:12px; box-shadow: 0 0 12px var(--neon-green); }
+    .qr-image { 
+      max-width:280px; max-height:280px; 
+      border-radius:12px; 
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+      background: white;
+      padding: 10px;
+    }
 
     /* ===== Footer ===== */
     .footer {
@@ -121,18 +156,64 @@
 
     /* ===== Loading ===== */
     .loading i { font-size:24px; color: var(--neon-green); animation: spin 1s linear infinite; }
+    .loading { text-align: center; margin: 15px 0; display: none; }
     @keyframes spin { 0% {transform:rotate(0deg);} 100% {transform:rotate(360deg);} }
 
     /* ===== Toggle ===== */
-    .toggle-container { display:flex; gap:4px; margin-bottom:20px; background:#02030a; border-radius:12px; padding:4px; border: 1px solid rgba(0,255,153,0.2); }
-    .toggle-option { flex:1; text-align:center; padding:10px; border-radius:8px; cursor:pointer; transition: all 0.3s ease; font-weight:500; font-size:14px; }
-    .toggle-option.active { background: var(--neon-green); color:#02030a; box-shadow:0 0 12px var(--neon-green); }
-    .toggle-option:not(.active) { color: var(--text-light); }
+    .toggle-container { 
+      display:flex; gap:4px; margin-bottom:20px; 
+      background:#02030a; border-radius:12px; 
+      padding:4px; border: 1px solid rgba(0,255,153,0.2); 
+    }
+    .toggle-option { 
+      flex:1; text-align:center; padding:10px; border-radius:8px; 
+      cursor:pointer; transition: all 0.3s ease; font-weight:500; font-size:14px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    
+    /* د درې بکسونو لپاره مختلف رنګونه */
+    .toggle-option:nth-child(1) {
+      background: #2ecc71; /* زرغون */
+      color: white;
+    }
+    .toggle-option:nth-child(2) {
+      background: #f1c40f; /* ژېړ */
+      color: #333;
+    }
+    .toggle-option:nth-child(3) {
+      background: #3498db; /* نیلي */
+      color: white;
+    }
+    
+    .toggle-option.active:nth-child(1) {
+      background: #27ae60; /* تېز زرغون */
+      box-shadow: 0 0 12px #2ecc71, 0 0 24px rgba(46, 204, 113, 0.3);
+      color: white;
+    }
+    .toggle-option.active:nth-child(2) {
+      background: #f39c12; /* تېز ژېړ */
+      box-shadow: 0 0 12px #f1c40f, 0 0 24px rgba(241, 196, 15, 0.3);
+      color: #333;
+    }
+    .toggle-option.active:nth-child(3) {
+      background: #2980b9; /* تېز نیلي */
+      box-shadow: 0 0 12px #3498db, 0 0 24px rgba(52, 152, 219, 0.3);
+      color: white;
+    }
+    
+    .toggle-option i {
+      font-size: 16px;
+    }
 
     /* ===== Media ===== */
     @media (max-width:480px) {
       .container { padding:20px; border-radius:16px; }
       .qr-image { max-width:200px; max-height:200px; }
+      .toggle-option { font-size: 12px; padding: 8px 5px; }
     }
 
     /* ===== Optional Background Neon Rain ===== */
@@ -146,6 +227,61 @@
       animation: rain 1s linear infinite;
     }
     @keyframes rain { 0% {background-position:0 0;} 100% {background-position:0 100%;} }
+    
+    /* د حیرانونکی (animated) افکت لپاره */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    /* د بکسونو لپاره اضافي سټایلونه */
+    .box-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    
+    .color-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .color-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+    
+    .box-green {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: white;
+    }
+    
+    .box-yellow {
+      background: linear-gradient(135deg, #f1c40f, #f39c12);
+      color: #333;
+    }
+    
+    .box-blue {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -163,9 +299,32 @@
       </div>
     </div>
 
+    <!-- د رنګونو بکسونه -->
+    <div class="box-container">
+      <div class="color-box box-green pulse-animation">
+        <span>زرغون</span>
+      </div>
+      <div class="color-box box-yellow pulse-animation" style="animation-delay: 0.5s;">
+        <span>ژیړ</span>
+      </div>
+      <div class="color-box box-blue pulse-animation" style="animation-delay: 1s;">
+        <span>نیلي</span>
+      </div>
+    </div>
+
     <div class="toggle-container">
-      <div class="toggle-option active" data-mode="pair"><i class="fas fa-key"></i> Pair Code</div>
-      <div class="toggle-option" data-mode="qr"><i class="fas fa-qrcode"></i> QR Code</div>
+      <div class="toggle-option active" data-mode="pair">
+        <i class="fas fa-key"></i>
+        <span>Pair Code</span>
+      </div>
+      <div class="toggle-option" data-mode="qr">
+        <i class="fas fa-qrcode"></i>
+        <span>QR Code</span>
+      </div>
+      <div class="toggle-option" data-mode="info">
+        <i class="fas fa-info-circle"></i>
+        <span>Info</span>
+      </div>
     </div>
 
     <div class="input-group" id="inputGroup">
@@ -175,13 +334,34 @@
 
     <button class="generate-btn" id="submit"><i class="fas fa-key"></i> Generate Pair Code</button>
 
-    <div class="loading" id="loading"><i class="fas fa-spinner"></i></div>
+    <div class="loading" id="loading">
+      <i class="fas fa-spinner"></i> Generating...
+    </div>
 
     <div class="code-display" id="codeDisplay">Your pair code will appear here</div>
 
     <div class="qr-display" id="qrDisplay">
       <img id="qrImage" class="qr-image" src="" alt="QR Code">
       <div class="qr-instructions" id="qrInstructions">Scan this QR code with your WhatsApp app</div>
+    </div>
+    
+    <!-- د معلوماتو بکس -->
+    <div class="qr-display hidden" id="infoDisplay">
+      <h3 style="margin-bottom: 10px; color: #333;">د Knight Bot په اړه معلومات</h3>
+      <p style="color: #333; margin-bottom: 10px;">
+        دا وسیله د WhatsApp سره د امن اړیکو لپاره ده. خپل کوډ په خوندي ډول ساتئ.
+      </p>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <div style="background: #2ecc71; padding: 8px; border-radius: 5px; color: white; flex: 1; text-align: center;">
+          امن
+        </div>
+        <div style="background: #f1c40f; padding: 8px; border-radius: 5px; color: #333; flex: 1; text-align: center;">
+          چټک
+        </div>
+        <div style="background: #3498db; padding: 8px; border-radius: 5px; color: white; flex: 1; text-align: center;">
+          اسانه
+        </div>
+      </div>
     </div>
 
     <button class="copy-btn" id="copy" onclick="copyCode()"><i class="fas fa-copy"></i> Copy Code</button>
@@ -195,46 +375,161 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
     let currentMode = 'pair';
+    let placeholderHighlighted = false;
 
+    // د toggle اختیارونو لپاره event listener
     document.querySelectorAll('.toggle-option').forEach(option => {
       option.addEventListener('click', function() {
         const mode = this.dataset.mode;
-        if(mode===currentMode) return;
-        document.querySelectorAll('.toggle-option').forEach(opt=>opt.classList.remove('active'));
+        if(mode === currentMode) return;
+        
+        document.querySelectorAll('.toggle-option').forEach(opt => opt.classList.remove('active'));
         this.classList.add('active');
         currentMode = mode;
 
         const submitBtn = document.getElementById('submit');
         const inputGroup = document.getElementById('inputGroup');
-        if(mode==='pair') { submitBtn.classList.remove('hidden'); inputGroup.classList.remove('hidden'); document.getElementById('qrDisplay').style.display='none'; document.getElementById('codeDisplay').style.display='flex'; }
-        else { submitBtn.classList.add('hidden'); inputGroup.classList.add('hidden'); generateQRCode(); }
-        document.getElementById('codeDisplay').innerHTML='Your pair code will appear here';
+        const qrDisplay = document.getElementById('qrDisplay');
+        const codeDisplay = document.getElementById('codeDisplay');
+        const infoDisplay = document.getElementById('infoDisplay');
+        
+        // د ټولو display عناصر لرې کول
+        qrDisplay.style.display = 'none';
+        codeDisplay.style.display = 'none';
+        infoDisplay.classList.add('hidden');
+        
+        if(mode === 'pair') {
+          submitBtn.classList.remove('hidden');
+          inputGroup.classList.remove('hidden');
+          codeDisplay.style.display = 'flex';
+        } 
+        else if(mode === 'qr') {
+          submitBtn.classList.add('hidden');
+          inputGroup.classList.add('hidden');
+          qrDisplay.style.display = 'block';
+          generateQRCode();
+        }
+        else if(mode === 'info') {
+          submitBtn.classList.add('hidden');
+          inputGroup.classList.add('hidden');
+          infoDisplay.classList.remove('hidden');
+        }
+        
+        document.getElementById('codeDisplay').innerHTML = 'Your pair code will appear here';
+        
+        // د placeholder highlight لرې کول
+        const inputField = document.getElementById('mobileNumber');
+        inputField.classList.remove('placeholder-highlight');
+        placeholderHighlighted = false;
       });
     });
 
+    // د QR کوډ جنریټ کول
     async function generateQRCode(){
-      const qrDisplay=document.getElementById("qrDisplay");
-      const qrImage=document.getElementById("qrImage");
-      const codeDisplay=document.getElementById("codeDisplay");
-      qrDisplay.style.display='block'; codeDisplay.style.display='none';
-      qrImage.src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KnightBot";
+      const qrDisplay = document.getElementById("qrDisplay");
+      const qrImage = document.getElementById("qrImage");
+      const codeDisplay = document.getElementById("codeDisplay");
+      
+      qrDisplay.style.display = 'block'; 
+      codeDisplay.style.display = 'none';
+      
+      // د QR کوډ لپاره د معلوماتو جوړول
+      const mobileNumber = document.getElementById("mobileNumber").value.trim();
+      const qrData = mobileNumber ? `https://wa.me/${mobileNumber.replace('+', '')}?text=KnightBot%20Pair%20Code` : 'KnightBot%20WhatsApp%20Linker';
+      
+      qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&color=333333&bgcolor=f1c40f`;
     }
 
-    document.getElementById("submit").addEventListener("click", async (e)=>{
+    // د Generate بټن event listener
+    document.getElementById("submit").addEventListener("click", async (e) => {
       e.preventDefault();
       const mobileNumber = document.getElementById("mobileNumber").value.trim();
-      const codeDisplay=document.getElementById("codeDisplay");
-      if(!mobileNumber){ codeDisplay.innerHTML='<div style="color:#e74c3c;">Please enter your WhatsApp number</div>'; return; }
-      codeDisplay.innerHTML=`<div style="color:var(--neon-green)">CODE: ${Math.floor(100000+Math.random()*900000)}</div>`;
+      const codeDisplay = document.getElementById("codeDisplay");
+      const loading = document.getElementById("loading");
+      
+      // د input-field placeholder highlight کول
+      const inputField = document.getElementById('mobileNumber');
+      inputField.classList.add('placeholder-highlight');
+      placeholderHighlighted = true;
+      
+      // د highlight لرې کول بعد از 3 ثانیې
+      setTimeout(() => {
+        if (placeholderHighlighted) {
+          inputField.classList.remove('placeholder-highlight');
+          placeholderHighlighted = false;
+        }
+      }, 3000);
+      
+      // د لوډینګ ښکاره کول
+      loading.style.display = 'block';
+      codeDisplay.innerHTML = '';
+      
+      // د کوډ جنریټ کولو simulation
+      setTimeout(() => {
+        loading.style.display = 'none';
+        
+        if(!mobileNumber) { 
+          codeDisplay.innerHTML = '<div style="color:#e74c3c;">Please enter your WhatsApp number</div>'; 
+          return; 
+        }
+        
+        // د 6 ډیجټ کوډ جنریټ کول
+        const pairCode = Math.floor(100000 + Math.random() * 900000);
+        codeDisplay.innerHTML = `<div style="color:white; font-size: 24px; text-shadow: 0 0 10px #ffffff;">CODE: ${pairCode}</div>`;
+        
+        // د کوډ د سپارلو animation
+        codeDisplay.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+          codeDisplay.style.transform = 'scale(1)';
+        }, 300);
+        
+      }, 1500);
     });
 
+    // د کوډ کاپي کولو فنکشن
     function copyCode(){
-      const text = document.getElementById("codeDisplay").innerText.replace('CODE: ','');
-      navigator.clipboard.writeText(text);
-      const btn = document.getElementById("copy");
-      btn.innerHTML='<i class="fas fa-check"></i> Copied!';
-      setTimeout(()=>{btn.innerHTML='<i class="fas fa-copy"></i> Copy Code';},2000);
+      const codeText = document.getElementById("codeDisplay").innerText;
+      let code = '';
+      
+      if (codeText.includes('CODE:')) {
+        code = codeText.replace('CODE:', '').trim();
+      } else {
+        code = '123456'; // د مثال لپاره
+      }
+      
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById("copy");
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.style.background = '#27ae60';
+        
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+          btn.style.background = '#02030a';
+        }, 2000);
+      });
     }
+
+    // د input په focus کې د placeholder highlight تنظیم
+    document.getElementById('mobileNumber').addEventListener('focus', function() {
+      if (!placeholderHighlighted) {
+        this.classList.add('placeholder-highlight');
+      }
+    });
+    
+    document.getElementById('mobileNumber').addEventListener('blur', function() {
+      if (!placeholderHighlighted) {
+        this.classList.remove('placeholder-highlight');
+      }
+    });
+    
+    // د پاڼې په لوډ کېدلو کې initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      // د لومړي بکس لپاره animation
+      const boxes = document.querySelectorAll('.color-box');
+      boxes.forEach((box, index) => {
+        box.style.animationDelay = `${index * 0.3}s`;
+      });
+    });
   </script>
 </body>
 </html>
