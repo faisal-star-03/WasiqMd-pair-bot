@@ -1,535 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Knight Bot - WhatsApp Linker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Knight Bot - WhatsApp Linker</title>
 
-  <!-- Hacker Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<!-- Hacker Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600&display=swap" rel="stylesheet"> 
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"> 
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+<style>
+  /* ===== Root Colors ===== */
+  :root {
+    --bg-dark: #0a0c14;
+    --bg-card: rgba(10,12,20,0.95);
+    --neon-green: #00ff99;
+    --text-light: #dbe7ff;
+    --highlight-orange: #ff8c00;
+    --border-glow: rgba(0,255,153,4.35);
+  }
 
-  <style>
-    /* ===== Root colors ===== */
-    :root {
-      --bg-dark: #0a0c14;
-      --bg-card: rgba(10,12,20,0.95);
-      --neon-green: #00ff99;
-      --neon-blue: #00c6ff;
-      --text-light: #c7ffe6;
-      --text-muted: #7f8c8d;
-      --hover-dark: rgba(255,255,255,0.05);
-      --border-glow: rgba(0,255,153,0.35);
-      --color-green: #2ecc71;
-      --color-yellow: #f1c40f;
-      --color-blue: #3498db;
-    }
+  /* ===== Base ===== */
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Orbitron', monospace;
+    background: radial-gradient(circle at top, #0a0c14 0%, #02030a 100%);
+    color: var(--text-light);
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh; padding:12px;
+    overflow-x:hidden;
+    position: relative;
+  }
 
-    /* ===== Base ===== */
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'Orbitron', monospace;
-      background: radial-gradient(circle at top, #0a0c14 0%, #02030a 100%);
-      color: var(--text-light);
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:100vh;
-      padding:15px;
-      overflow-x:hidden;
-    }
+  canvas#matrix {
+    position: fixed; top:0; left:0; width:100%; height:100%; z-index:0;
+  }
 
-    /* ===== Container ===== */
-    .container {
-      width:100%;
-      max-width:480px;
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 0 20px rgba(0,255,153,0.2), 0 20px 40px rgba(0,0,0,0.7);
-      border: 1px solid var(--border-glow);
-      backdrop-filter: blur(6px);
-      position: relative;
-      z-index: 2;
-    }
+  /* ===== Container ===== */
+  .container {
+    position: relative; z-index: 2;
+    width:100%; max-width:480px;
+    background: var(--bg-card); border-radius:20px;
+    padding:25px;
+    box-shadow: 0 0 20px rgba(0,255,153,0.2), 0 20px 40px rgba(0,0,0,0.7);
+    border:1px solid var(--border-glow);
+    backdrop-filter: blur(6px);
+  }
 
-    /* ===== Header ===== */
-    .header { text-align:center; margin-bottom:20px; }
-    .logo {
-      width:70px; height:70px; margin:0 auto 12px;
-      background:#02030a; border-radius:50%;
-      display:flex; justify-content:center; align-items:center;
-      font-size:28px; color: var(--neon-green);
-      box-shadow: 0 0 12px var(--neon-green), 0 0 24px var(--neon-green);
-    }
-    .title { font-size:26px; font-weight:700; color: var(--neon-green); margin-bottom:6px; text-shadow: 0 0 8px var(--neon-green);}
-    .subtitle { font-size:14px; color: var(--text-muted); margin-bottom:16px;}
+  /* ===== Header ===== */
+  .header { text-align:center; margin-bottom:20px; }
+  .logo {
+    width:70px; height:70px; margin:0 auto 12px;
+    background:#02030a; border-radius:50%;
+    display:flex; justify-content:center; align-items:center;
+    font-size:28px; color: var(--neon-green);
+    box-shadow: 0 0 12px var(--neon-green), 0 0 2px var(--neon-green);
+  }
+  .title { font-size:30px; font-weight:700; color: var(--neon-green); margin-bottom:6px; text-shadow: 0 0 8px var(--neon-green);}
+  .subtitle { font-size:10px; color: var(--text-light); margin-bottom:16px;}
 
-    /* ===== Social Icons ===== */
-    .social-icons { display:flex; justify-content:center; gap:12px; margin-bottom:20px; }
-    .social-icons a {
-      width:44px; height:44px; border-radius:50%;
-      display:flex; justify-content:center; align-items:center;
-      font-size:18px; text-decoration:none; transition: all 0.3s ease;
-      color:#fff; box-shadow: 0 0 6px rgba(0,0,0,0.2);
-    }
-    .social-icons a.youtube { background:#ff0000; }
-    .social-icons a.telegram { background:#0088cc; }
-    .social-icons a.whatsapp { background:#0cfa10; }
-    .social-icons a.github { background:#333; }
-    .social-icons a:hover { transform: scale(1.15); box-shadow: 0 0 14px var(--neon-green), 0 0 28px var(--neon-green); }
+  /* ===== Social Icons ===== */
+  .social-icons { display:flex; justify-content:center; gap:12px; margin-bottom:20px; }
+  .social-icons a {
+    width:44px; height:44px; border-radius:50%;
+    display:flex; justify-content:center; align-items:center;
+    font-size:18px; text-decoration:none; transition: all 0.3s ease;
+    color:#fff; box-shadow: 0 0 6px rgba(0,0,0,0.2);
+  }
+  .social-icons a.youtube { background:#ff0000; }
+  .social-icons a.telegram { background:#0088cc; }
+  .social-icons a.whatsapp { background:#0cfa10; }
+  .social-icons a.github { background:#333; }
+  .social-icons a:hover { transform: scale(1.15); box-shadow: 0 0 14px var(--neon-green), 0 0 20px var(--neon-green); }
 
-    /* ===== Input & Buttons ===== */
-    .input-group { margin-bottom:18px; }
-    .input-label { font-size:13px; margin-bottom:6px; display:block; color: var(--text-light);}
-    .input-field {
-      width:100%; padding:12px; border-radius:12px;
-      border:1px solid rgba(0,255,153,0.2);
-      background:#02030a; color: var(--text-light); font-size:15px;
-      transition: all 0.3s ease;
-    }
-    .input-field:focus { outline:none; border-color: var(--neon-green); box-shadow: 0 0 12px var(--neon-green); }
-    
-    /* د شعار (placeholder) لپاره رنګونه */
-    .input-field::placeholder {
-      color: var(--text-muted);
-      transition: all 0.3s ease;
-    }
-    
-    /* کله چې input په focus وي او شعار ښکاره شي */
-    .input-field:focus::placeholder {
-      color: #ffffff !important; /* سپین رنګ */
-      text-shadow: 0 0 5px #ffffff, 0 0 10px #ffff00 !important; /* سپین او ژېړ glow */
-    }
-    
-    /* د generate-btn په کلیک کې د placeholder رنګ بدلون */
-    .input-field.placeholder-highlight::placeholder {
-      color: #ffffff !important;
-      text-shadow: 0 0 5px #ffffff, 0 0 10px #ffff00 !important;
-    }
+  /* ===== Input & Buttons ===== */
+  .input-group { margin-bottom:20px; }
+  .input-label { font-size:18px; margin-bottom:6px; display:block; color: var(--text-light);}
+  .input-field {
+    width:100%; padding:12px; border-radius:12px;
+    border:1px solid rgba(0,225,153,0.2);
+    background:#02030a; color: var(--text-light); font-size:19px;
+    transition: all 0.3s ease;
+    font-family: 'Rajdhani', monospace;
+  }
+  .input-field:focus { outline:none; border-color: var(--neon-green); box-shadow: 0  4px var(--neon-green); }
 
-    .generate-btn, .copy-btn {
-      width:100%; padding:12px; border:none; border-radius:12px;
-      font-size:15px; font-weight:600; cursor:pointer; transition: all 0.3s ease;
-      background:#02030a; color: var(--neon-green);
-      box-shadow: 0 0 6px var(--neon-green); margin-bottom:12px;
-    }
-    .generate-btn:hover, .copy-btn:hover { transform: translateY(-2px); box-shadow: 0 0 12px var(--neon-green), 0 0 24px var(--neon-green); }
+  /* ===== Notice ===== */
+  .notice { background: #2b221a; color: #f7b36b; padding: 15px; border-left: 4px solid #f7b36b; margin:10px 0 15px 0; border-radius:6px; font-size:13px; display:flex; align-items:center; }
+  .notice img { width:24px; height:24px; margin-right:6px; }
 
-    /* ===== Code Display ===== */
-    .code-display {
-      background: linear-gradient(135deg, #2ecc71, #27ae60); /* زرغون رنګونه */
-      border-radius:12px; padding:14px; margin-bottom:16px;
-      text-align:center; font-weight:600; font-size:16px;
-      border:1px solid rgba(0,255,153,0.3); 
-      box-shadow: 0 0 12px rgba(46, 204, 113, 0.4), inset 0 0 6px rgba(0,255,153,0.2);
-      display:flex; justify-content:center; align-items:center;
-      color: white;
-      min-height: 60px;
-    }
+  /* ===== Buttons with separate font ===== */
+  .generate-btn, .copy-btn {
+    font-family: 'Orbitron', monospace;
+    width:100%; padding:12px; border:none; border-radius:12px;
+    font-size:15px; font-weight:700; cursor:pointer; transition: all 0.3s ease;
+    margin-bottom:18px;
+  }
+/* ===== Buttons (Ultra Soft & Clean) ===== */
+.generate-btn,
+.copy-btn {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 12px;
 
-    /* ===== QR Display ===== */
-    .qr-display {
-      background: linear-gradient(135deg, #f1c40f, #f39c12); /* ژېړ رنګونه */
-      border-radius:12px; padding:20px; margin-bottom:16px;
-      text-align:center; 
-      border:1px solid rgba(241, 196, 15, 0.3);
-      box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
-      display:none;
-      color: #333;
-    }
-    .qr-image { 
-      max-width:280px; max-height:280px; 
-      border-radius:12px; 
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-      background: white;
-      padding: 10px;
-    }
+  font-size: 14px;
+  font-family: 'Rajdhani', sans-serif; /* نوی فونټ */
+  font-weight: 600;
+  letter-spacing: 0.5px;
 
-    /* ===== Footer ===== */
-    .footer {
-      text-align:center; font-size:12px; color: var(--text-muted);
-      margin-top:10px; border-top:1px solid rgba(0,255,153,0.2); padding-top:8px;
-    }
+  cursor: pointer;
+  background: #02030a;
 
-    /* ===== Loading ===== */
-    .loading i { font-size:24px; color: var(--neon-green); animation: spin 1s linear infinite; }
-    .loading { text-align: center; margin: 15px 0; display: none; }
-    @keyframes spin { 0% {transform:rotate(0deg);} 100% {transform:rotate(360deg);} }
+  transition: box-shadow 0.25s ease, background 0.25s ease;
+}
 
-    /* ===== Toggle ===== */
-    .toggle-container { 
-      display:flex; gap:4px; margin-bottom:20px; 
-      background:#02030a; border-radius:12px; 
-      padding:4px; border: 1px solid rgba(0,255,153,0.2); 
-    }
-    .toggle-option { 
-      flex:1; text-align:center; padding:10px; border-radius:8px; 
-      cursor:pointer; transition: all 0.3s ease; font-weight:500; font-size:14px; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-    
-    /* د درې بکسونو لپاره مختلف رنګونه */
-    .toggle-option:nth-child(1) {
-      background: #2ecc71; /* زرغون */
-      color: white;
-    }
-    .toggle-option:nth-child(2) {
-      background: #f1c40f; /* ژېړ */
-      color: #333;
-    }
-    .toggle-option:nth-child(3) {
-      background: #3498db; /* نیلي */
-      color: white;
-    }
-    
-    .toggle-option.active:nth-child(1) {
-      background: #27ae60; /* تېز زرغون */
-      box-shadow: 0 0 12px #2ecc71, 0 0 24px rgba(46, 204, 113, 0.3);
-      color: white;
-    }
-    .toggle-option.active:nth-child(2) {
-      background: #f39c12; /* تېز ژېړ */
-      box-shadow: 0 0 12px #f1c40f, 0 0 24px rgba(241, 196, 15, 0.3);
-      color: #333;
-    }
-    .toggle-option.active:nth-child(3) {
-      background: #2980b9; /* تېز نیلي */
-      box-shadow: 0 0 12px #3498db, 0 0 24px rgba(52, 152, 219, 0.3);
-      color: white;
-    }
-    
-    .toggle-option i {
-      font-size: 16px;
-    }
+/* ===== Generate Button ===== */
+.generate-btn {
+  color: #dbe7ff; /* سپین */
+  box-shadow: 0 0 3px rgba(219,231,255,0.35);
+}
 
-    /* ===== Media ===== */
-    @media (max-width:480px) {
-      .container { padding:20px; border-radius:16px; }
-      .qr-image { max-width:200px; max-height:200px; }
-      .toggle-option { font-size: 12px; padding: 8px 5px; }
-    }
+.generate-btn:hover {
+  box-shadow: 0 0 5px rgba(219,231,255,0.55);
+}
 
-    /* ===== Optional Background Neon Rain ===== */
-    body::before {
-      content:"";
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background: radial-gradient(circle, rgba(0,255,153,0.05) 1px, transparent 1px);
-      background-size:5px 5px;
-      z-index:1;
-      pointer-events:none;
-      animation: rain 1s linear infinite;
-    }
-    @keyframes rain { 0% {background-position:0 0;} 100% {background-position:0 100%;} }
-    
-    /* د حیرانونکی (animated) افکت لپاره */
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    
-    .pulse-animation {
-      animation: pulse 2s infinite;
-    }
-    
-    .hidden {
-      display: none !important;
-    }
-    
-    /* د بکسونو لپاره اضافي سټایلونه */
-    .box-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      justify-content: center;
-    }
-    
-    .color-box {
-      width: 80px;
-      height: 80px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      transition: all 0.3s ease;
-    }
-    
-    .color-box:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    }
-    
-    .box-green {
-      background: linear-gradient(135deg, #2ecc71, #27ae60);
-      color: white;
-    }
-    
-    .box-yellow {
-      background: linear-gradient(135deg, #f1c40f, #f39c12);
-      color: #333;
-    }
-    
-    .box-blue {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      color: white;
-    }
-  </style>
+.generate-btn:active {
+  background: rgba(219,231,255,0.05);
+  box-shadow: 0 0 6px rgba(219,231,255,0.75);
+}
+ /* ===== Copy Button (Refined) ===== */
+.copy-btn {
+  width: 80%;    
+  display: block;
+margin: 10px auto 0 auto;
+  padding: 10px;            /* لږ کوچنی padding */
+  margin-top: 6px;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;          /* کوچنی فونټ */
+  font-family: 'JetBrains Mono', monospace; /* بولډ فونټ */
+  font-weight: 700;         /* بولډ */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+
+  background: #02030a;
+  color: #ff8c00;           /* نارنجی په عادي حالت کې */
+  box-shadow: 0 0 4px rgba(255,140,0,0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+/* Hover – نرم */
+.copy-btn:hover {
+  box-shadow: 0 0 5px rgba(255,140,0,0.55);
+}
+
+/* Active – لږ فشار افکت */
+.copy-btn:active {
+  background: rgba(255,140,0,0.05);
+  box-shadow: 0 0 6px rgba(255,140,0,0.7);
+}
+
+/* Click Animation / Copied */
+.copy-btn.active {
+  transform: scale(0.95);               /* لږ کوچنی */
+  box-shadow: 0 0 10px rgba(255,140,0,0.7);
+  background: rgba(255,140,0,0.1);
+  color: #ffffff;                        /* سپین رنګ کله چې Copy شوی */
+}
+  /* ===== Loading Spinner ===== */
+  .loading { display:none; text-align:center; margin-bottom:12px; }
+  .loading i {
+    font-size:24px;
+    animation: spin 1s linear infinite, colorFlash 1.2s ease-in-out infinite alternate;
+  }
+  @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+  @keyframes colorFlash { 0%{color: var(--highlight-orange);} 50%{color: var(--text-light);} 100%{color: var(--highlight-orange);} }
+
+/* ===== Code Display (Notes Style) ===== */
+.code-display {
+  background: linear-gradient(180deg, #05070f, #02030a);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+
+  color: #dbe7ff;
+  text-align: left;
+
+  border-left: 3px solid #00ff99;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+/* Cursor | */
+.code-display span {
+  animation: blink 1s infinite;
+  margin-left: 2px;
+  color: #dbe7ff;
+}
+
+/* Error Style */
+.code-display.error {
+  border-left-color: #ff8c00;
+  color: #ffb366;
+}
+
+.code-display.error span {
+  color: #ffb366;
+}
+
+/* Cursor Blink */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+  /* ===== QR Display ===== */
+  .qr-display {
+    background:#02030a; border-radius:12px; padding:20px; margin-bottom:16px;
+    text-align:center; border:1px solid rgba(0,255,153,0.2);
+    display:none;
+  }
+  .qr-image { max-width:280px; max-height:280px; border-radius:12px; box-shadow: 0 0 12px var(--neon-green); }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align:center; font-size:13px; font-family: 'Orbitron', monospace;
+    margin-top:12px; padding-top:10px; border-top:2px solid var(--highlight-orange);
+    color: var(--text-light); text-shadow: 0 0 2px #00ff99, 0 0 4px rgba(0,255,153,0.5);
+  }
+  .footer span.important { color: var(--highlight-orange); font-weight:bold; text-shadow:0 0 4px var(--highlight-orange),0 0 8px rgba(255,140,0,0.5); }
+
+  /* ===== Toggle ===== */
+  .toggle-container { display:flex; gap:4px; margin-bottom:20px; background:#02030a; border-radius:12px; padding:4px; border: 1px solid rgba(0,255,153,0.2); }
+  .toggle-option { flex:1; text-align:center; padding:10px; border-radius:8px; cursor:pointer; transition: all 0.3s ease; font-weight:500; font-size:14px; }
+  .toggle-option.active { background: var(--neon-green); color:#02030a; box-shadow:0 0 12px var(--neon-green); }
+  .toggle-option:not(.active) { color: var(--text-light); }
+
+  /* ===== Media ===== */
+  @media(max-width:480px) {
+    .container { padding:20px; border-radius:16px; }
+    .qr-image { max-width:200px; max-height:200px; }
+  }
+
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="logo"><i class="fas fa-robot"></i></div>
-      <h1 class="title">Knight Bot</h1>
-      <p class="subtitle">Link your WhatsApp device</p>
 
-      <div class="social-icons">
-        <a href="#" class="youtube"><i class="fab fa-youtube"></i></a>
-        <a href="#" class="telegram"><i class="fab fa-telegram-plane"></i></a>
-        <a href="#" class="whatsapp"><i class="fab fa-whatsapp"></i></a>
-        <a href="#" class="github"><i class="fab fa-github"></i></a>
-      </div>
-    </div>
+<canvas id="matrix"></canvas>
 
-    <!-- د رنګونو بکسونه -->
-    <div class="box-container">
-      <div class="color-box box-green pulse-animation">
-        <span>زرغون</span>
-      </div>
-      <div class="color-box box-yellow pulse-animation" style="animation-delay: 0.5s;">
-        <span>ژیړ</span>
-      </div>
-      <div class="color-box box-blue pulse-animation" style="animation-delay: 1s;">
-        <span>نیلي</span>
-      </div>
-    </div>
+<div class="container">
+  <div class="header">
+    <div class="logo"><i class="fas fa-robot"></i></div>
+    <h1 class="title">Knight Bot</h1>
+    <p class="subtitle">Link your WhatsApp device</p>
 
-    <div class="toggle-container">
-      <div class="toggle-option active" data-mode="pair">
-        <i class="fas fa-key"></i>
-        <span>Pair Code</span>
-      </div>
-      <div class="toggle-option" data-mode="qr">
-        <i class="fas fa-qrcode"></i>
-        <span>QR Code</span>
-      </div>
-      <div class="toggle-option" data-mode="info">
-        <i class="fas fa-info-circle"></i>
-        <span>Info</span>
-      </div>
-    </div>
-
-    <div class="input-group" id="inputGroup">
-      <label class="input-label">Enter your WhatsApp number with country code</label>
-      <input type="text" id="mobileNumber" class="input-field" placeholder="+917023951514" pattern="[+][0-9]{10,}" title="Country code + number">
-    </div>
-
-    <button class="generate-btn" id="submit"><i class="fas fa-key"></i> Generate Pair Code</button>
-
-    <div class="loading" id="loading">
-      <i class="fas fa-spinner"></i> Generating...
-    </div>
-
-    <div class="code-display" id="codeDisplay">Your pair code will appear here</div>
-
-    <div class="qr-display" id="qrDisplay">
-      <img id="qrImage" class="qr-image" src="" alt="QR Code">
-      <div class="qr-instructions" id="qrInstructions">Scan this QR code with your WhatsApp app</div>
-    </div>
-    
-    <!-- د معلوماتو بکس -->
-    <div class="qr-display hidden" id="infoDisplay">
-      <h3 style="margin-bottom: 10px; color: #333;">د Knight Bot په اړه معلومات</h3>
-      <p style="color: #333; margin-bottom: 10px;">
-        دا وسیله د WhatsApp سره د امن اړیکو لپاره ده. خپل کوډ په خوندي ډول ساتئ.
-      </p>
-      <div style="display: flex; gap: 10px; margin-top: 15px;">
-        <div style="background: #2ecc71; padding: 8px; border-radius: 5px; color: white; flex: 1; text-align: center;">
-          امن
-        </div>
-        <div style="background: #f1c40f; padding: 8px; border-radius: 5px; color: #333; flex: 1; text-align: center;">
-          چټک
-        </div>
-        <div style="background: #3498db; padding: 8px; border-radius: 5px; color: white; flex: 1; text-align: center;">
-          اسانه
-        </div>
-      </div>
-    </div>
-
-    <button class="copy-btn" id="copy" onclick="copyCode()"><i class="fas fa-copy"></i> Copy Code</button>
-
-    <div class="footer">
-      <p>© 2025 Mr Unique Hacker | Knight Bot</p>
-      <p>IMPORTANT: This toolkit is for educational and authorized use only. Unauthorized use is prohibited.</p>
+    <div class="social-icons">
+      <a href="#" class="youtube"><i class="fab fa-youtube"></i></a>
+      <a href="#" class="telegram"><i class="fab fa-telegram-plane"></i></a>
+      <a href="#" class="whatsapp"><i class="fab fa-whatsapp"></i></a>
+      <a href="#" class="github"><i class="fab fa-github"></i></a>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
-  <script>
-    let currentMode = 'pair';
-    let placeholderHighlighted = false;
+  <div class="toggle-container">
+    <div class="toggle-option active" data-mode="pair"><i class="fas fa-key"></i> Pair Code</div>
+    <div class="toggle-option" data-mode="qr"><i class="fas fa-qrcode"></i> QR Code</div>
+  </div>
 
-    // د toggle اختیارونو لپاره event listener
-    document.querySelectorAll('.toggle-option').forEach(option => {
-      option.addEventListener('click', function() {
-        const mode = this.dataset.mode;
-        if(mode === currentMode) return;
-        
-        document.querySelectorAll('.toggle-option').forEach(opt => opt.classList.remove('active'));
-        this.classList.add('active');
-        currentMode = mode;
+  <div class="input-group" id="inputGroup">
+    <input type="text" id="mobileNumber" class="input-field" placeholder="+917023951514">
+  </div>
 
-        const submitBtn = document.getElementById('submit');
-        const inputGroup = document.getElementById('inputGroup');
-        const qrDisplay = document.getElementById('qrDisplay');
-        const codeDisplay = document.getElementById('codeDisplay');
-        const infoDisplay = document.getElementById('infoDisplay');
-        
-        // د ټولو display عناصر لرې کول
-        qrDisplay.style.display = 'none';
-        codeDisplay.style.display = 'none';
-        infoDisplay.classList.add('hidden');
-        
-        if(mode === 'pair') {
-          submitBtn.classList.remove('hidden');
-          inputGroup.classList.remove('hidden');
-          codeDisplay.style.display = 'flex';
-        } 
-        else if(mode === 'qr') {
-          submitBtn.classList.add('hidden');
-          inputGroup.classList.add('hidden');
-          qrDisplay.style.display = 'block';
-          generateQRCode();
-        }
-        else if(mode === 'info') {
-          submitBtn.classList.add('hidden');
-          inputGroup.classList.add('hidden');
-          infoDisplay.classList.remove('hidden');
-        }
-        
-        document.getElementById('codeDisplay').innerHTML = 'Your pair code will appear here';
-        
-        // د placeholder highlight لرې کول
-        const inputField = document.getElementById('mobileNumber');
-        inputField.classList.remove('placeholder-highlight');
-        placeholderHighlighted = false;
-      });
-    });
+  <div class="notice">
+    <img src="https://i.postimg.cc/6pf6KDn8/pencil-3075908.png" alt="Notice Icon">
+    Enter your WhatsApp number with country code
+  </div>
 
-    // د QR کوډ جنریټ کول
-    async function generateQRCode(){
-      const qrDisplay = document.getElementById("qrDisplay");
-      const qrImage = document.getElementById("qrImage");
-      const codeDisplay = document.getElementById("codeDisplay");
-      
-      qrDisplay.style.display = 'block'; 
-      codeDisplay.style.display = 'none';
-      
-      // د QR کوډ لپاره د معلوماتو جوړول
-      const mobileNumber = document.getElementById("mobileNumber").value.trim();
-      const qrData = mobileNumber ? `https://wa.me/${mobileNumber.replace('+', '')}?text=KnightBot%20Pair%20Code` : 'KnightBot%20WhatsApp%20Linker';
-      
-      qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&color=333333&bgcolor=f1c40f`;
+  <button class="generate-btn" id="submit"><i class="fas fa-key"></i> Generate Pair Code</button>
+
+  <div class="loading" id="loading"><i class="fas fa-spinner"></i></div>
+
+  <div class="code-display" id="codeDisplay">Your pair code will appear here</div>
+
+  <button class="copy-btn" id="copy"><i class="fas fa-copy"></i> Copy Code</button>
+
+  <div class="qr-display" id="qrDisplay">
+    <img id="qrImage" class="qr-image" src="" alt="QR Code">
+  </div>
+
+  <div class="footer">
+    © 2025 Mr Unique Hacker | <span class="important">Use Only For Educational Purposes</span>
+  </div>
+</div>
+<audio id="clickSound" preload="auto">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-tone-1113.mp3" type="audio/mpeg">
+</audio> 
+<script>
+/* ================= MATRIX BACKGROUND ================= */
+const canvas = document.getElementById("matrix");
+if (canvas) {
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*".split("");
+  const fontSize = 14;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(0);
+
+  function drawMatrix() {
+    ctx.fillStyle = "rgba(0,0,0,0.06)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#00ff99";
+    ctx.font = fontSize + "px Orbitron";
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = letters[Math.floor(Math.random() * letters.length)];
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
     }
+    requestAnimationFrame(drawMatrix);
+  }
+  drawMatrix();
 
-    // د Generate بټن event listener
-    document.getElementById("submit").addEventListener("click", async (e) => {
-      e.preventDefault();
-      const mobileNumber = document.getElementById("mobileNumber").value.trim();
-      const codeDisplay = document.getElementById("codeDisplay");
-      const loading = document.getElementById("loading");
-      
-      // د input-field placeholder highlight کول
-      const inputField = document.getElementById('mobileNumber');
-      inputField.classList.add('placeholder-highlight');
-      placeholderHighlighted = true;
-      
-      // د highlight لرې کول بعد از 3 ثانیې
-      setTimeout(() => {
-        if (placeholderHighlighted) {
-          inputField.classList.remove('placeholder-highlight');
-          placeholderHighlighted = false;
-        }
-      }, 3000);
-      
-      // د لوډینګ ښکاره کول
-      loading.style.display = 'block';
-      codeDisplay.innerHTML = '';
-      
-      // د کوډ جنریټ کولو simulation
-      setTimeout(() => {
-        loading.style.display = 'none';
-        
-        if(!mobileNumber) { 
-          codeDisplay.innerHTML = '<div style="color:#e74c3c;">Please enter your WhatsApp number</div>'; 
-          return; 
-        }
-        
-        // د 6 ډیجټ کوډ جنریټ کول
-        const pairCode = Math.floor(100000 + Math.random() * 900000);
-        codeDisplay.innerHTML = `<div style="color:white; font-size: 24px; text-shadow: 0 0 10px #ffffff;">CODE: ${pairCode}</div>`;
-        
-        // د کوډ د سپارلو animation
-        codeDisplay.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          codeDisplay.style.transform = 'scale(1)';
-        }, 300);
-        
-      }, 1500);
-    });
+  window.addEventListener("resize", () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
 
-    // د کوډ کاپي کولو فنکشن
-    function copyCode(){
-      const codeText = document.getElementById("codeDisplay").innerText;
-      let code = '';
-      
-      if (codeText.includes('CODE:')) {
-        code = codeText.replace('CODE:', '').trim();
-      } else {
-        code = '123456'; // د مثال لپاره
-      }
-      
-      navigator.clipboard.writeText(code).then(() => {
-        const btn = document.getElementById("copy");
-        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        btn.style.background = '#27ae60';
-        
-        setTimeout(() => {
-          btn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
-          btn.style.background = '#02030a';
-        }, 2000);
-      });
+/* ================= TYPE WRITER ================= */
+function typeText(element, text, isError = false) {
+  element.classList.toggle('error', isError);
+  element.innerHTML = ''; // clear previous content
+
+  const cursor = document.createElement('span');
+  cursor.textContent = ' |';
+  cursor.style.marginLeft = '2px';
+  cursor.style.color = isError ? '#ffb366' : '#dbe7ff';
+  cursor.style.animation = 'blink 1s infinite';
+  element.appendChild(cursor);
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < text.length) {
+      cursor.insertAdjacentText('beforebegin', text.charAt(i));
+      i++;
+    } else {
+      clearInterval(interval);
     }
+  }, 60); // ورو ورو تایپ کول (60ms)
+} 
 
-    // د input په focus کې د placeholder highlight تنظیم
-    document.getElementById('mobileNumber').addEventListener('focus', function() {
-      if (!placeholderHighlighted) {
-        this.classList.add('placeholder-highlight');
-      }
-    });
-    
-    document.getElementById('mobileNumber').addEventListener('blur', function() {
-      if (!placeholderHighlighted) {
-        this.classList.remove('placeholder-highlight');
-      }
-    });
-    
-    // د پاڼې په لوډ کېدلو کې initialization
-    document.addEventListener('DOMContentLoaded', function() {
-      // د لومړي بکس لپاره animation
-      const boxes = document.querySelectorAll('.color-box');
-      boxes.forEach((box, index) => {
-        box.style.animationDelay = `${index * 0.3}s`;
-      });
-    });
-  </script>
+/* ================= TOGGLE PAIR / QR ================= */
+let currentMode = "pair";
+
+document.querySelectorAll(".toggle-option").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.dataset.mode === currentMode) return;
+
+    document.querySelectorAll(".toggle-option").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    currentMode = btn.dataset.mode;
+
+    const submit = document.getElementById("submit");
+    const inputGroup = document.getElementById("inputGroup");
+    const codeDisplay = document.getElementById("codeDisplay");
+    const qrDisplay = document.getElementById("qrDisplay");
+
+    if (currentMode === "pair") {
+      submit.style.display = "block";
+      inputGroup.style.display = "block";
+      codeDisplay.style.display = "flex";
+      qrDisplay.style.display = "none";
+    } else {
+      submit.style.display = "none";
+      inputGroup.style.display = "none";
+      codeDisplay.style.display = "none";
+      qrDisplay.style.display = "block";
+      generateQRCode();
+    }
+  });
+});
+
+function generateQRCode() {
+  const img = document.getElementById("qrImage");
+  const number = document.getElementById("mobileNumber").value.trim() || "KnightBot";
+  img.src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
+    encodeURIComponent(number);
+}
+
+/* ================= GENERATE CODE ================= */
+document.getElementById("submit").addEventListener("click", () => {
+  const mobileNumber = document.getElementById("mobileNumber").value.trim();
+  const codeDisplay = document.getElementById("codeDisplay");
+  const loading = document.getElementById("loading");
+
+  if (!mobileNumber) {
+    typeText(codeDisplay, 'ERROR: Please enter your WhatsApp number', true);
+    return;
+  }
+
+  loading.style.display = "block";
+  codeDisplay.innerHTML = '';
+
+  setTimeout(() => {
+    const code = Math.floor(100000 + Math.random() * 900000);
+    typeText(codeDisplay, `PAIR CODE GENERATED: ${code}`);
+    loading.style.display = "none";
+  }, 1200);
+}); 
+
+const copyBtn = document.getElementById("copy");
+copyBtn.addEventListener("click", () => {
+  const codeDisplay = document.getElementById("codeDisplay");
+  const codeText = codeDisplay.innerText.replace('PAIR CODE GENERATED:', '').trim();
+
+  // که کود نه وي، ارر ښکاره کړه
+  if (!codeText || codeDisplay.classList.contains('error')) {
+    typeText(codeDisplay, 'ERROR: Please enter your WhatsApp number', true);
+    return;
+  }
+
+  // کاپي کود
+  navigator.clipboard.writeText(codeText);
+
+  // Button animation + Copied text
+  copyBtn.classList.add("active");
+  copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+
+  // څو ثانیې وروسته اصلي حالت ته راستون کړه
+  setTimeout(() => {
+    copyBtn.classList.remove("active");
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+  }, 1800);
+});
+/* ================= CLICK SOUND ================= */
+const clickSound = document.getElementById("clickSound");
+function playClickSound() {
+  if (!clickSound) return;
+  clickSound.currentTime = 0;
+  clickSound.play();
+}
+
+document.getElementById("submit").addEventListener("click", playClickSound);
+document.getElementById("copy").addEventListener("click", playClickSound);
+</script> 
 </body>
 </html>
