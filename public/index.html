@@ -90,10 +90,10 @@
       const res = await fetch(`/api/pair?number=${number}`);
       const data = await res.json();
 
-      if (data.code) {
+      if (data.pairingCode) {
         result.innerHTML = `
           ✅ Pairing Code:
-          <div class="code">${data.code}</div>
+          <div class="code">${data.pairingCode}</div>
           <br>
           WhatsApp → Settings → Linked Devices → Link with code
         `;
