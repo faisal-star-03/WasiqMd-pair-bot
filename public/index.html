@@ -770,6 +770,7 @@ id="star">
 <audio id="clickSound" preload="auto">
   <source src="https://assets.mixkit.co/sfx/preview/mixkit-soft-click-tone-1113.mp3" type="audio/mpeg">
 </audio> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
 <script>
 /* ================= MATRIX BACKGROUND ================= */
 const canvas = document.getElementById("matrix");
@@ -786,7 +787,6 @@ if (canvas) {
   function drawMatrix() {
     ctx.fillStyle = "rgba(0,0,0,0.06)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     for (let i = 0; i < drops.length; i++) {
       const color = Math.random() > 0.5 ? "#ffffff" : "#ff8c00";
       ctx.fillStyle = color;
@@ -827,12 +827,14 @@ function typeText(element, text, isError = false) {
 
 /* ================= TOGGLE PAIR / QR ================= */
 let currentMode = "pair";
+
 document.querySelectorAll(".toggle-option").forEach(btn => {
   btn.addEventListener("click", () => {
     if (btn.dataset.mode === currentMode) return;
 
     document.querySelectorAll(".toggle-option").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
+
     currentMode = btn.dataset.mode;
 
     const submit = document.getElementById("submit");
@@ -850,7 +852,7 @@ document.querySelectorAll(".toggle-option").forEach(btn => {
       inputGroup.style.display = "none";
       star.style.display = "none";
       qrDisplay.style.display = "block";
-      generateQRCode(); // real QR from server
+      generateQRCode(); // Call server QR
     }
   });
 });
@@ -860,16 +862,24 @@ async function generateQRCode() {
   const qrDisplay = document.getElementById("qrDisplay");
   const codeDisplay = document.getElementById("codeDisplay");
   const img = document.getElementById("qrImage");
+  const instructions = document.getElementById("qrInstructions");
   const number = document.getElementById("mobileNumber").value.trim() || "KnightBot";
 
   codeDisplay.style.display = 'none';
   qrDisplay.style.display = 'block';
-  img.src = ''; // clear previous
+  img.src = '';
+  instructions.innerHTML = '';
 
   try {
     const res = await axios(`/qr?number=${encodeURIComponent(number)}`);
-    if (res.data.qr) img.src = res.data.qr;
-    else img.alt = "Failed to generate QR code";
+    if (res.data.qr) {
+      img.src = res.data.qr;
+      if (res.data.instructions) {
+        instructions.innerHTML = res.data.instructions.join('<br>');
+      }
+    } else {
+      img.alt = "Failed to generate QR code";
+    }
   } catch (err) {
     console.error("QR Error:", err);
     img.alt = "Error fetching QR code";
@@ -895,6 +905,7 @@ document.getElementById("submit").addEventListener("click", async () => {
   const starText = star.querySelector(".star-text");
 
   try {
+    // ✅ Call server /pair endpoint
     const res = await axios(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
     const code = res.data.code || "Service Unavailable";
     typeText(starText, code === "Service Unavailable" ? "Service Unavailable" : `PAIR CODE GENERATED: ${code}`);
@@ -919,8 +930,50 @@ document.getElementById("copy").addEventListener("click", () => {
   const copyBtn = document.getElementById("copy");
   copyBtn.classList.add("active");
   copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-  setTimeout(() => { copyBtn.classList.remove("active"); copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code'; }, 1800);
+  setTimeout(() => {
+    copyBtn.classList.remove("active");
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+  }, 1800);
 });
+
+/* ================= CLICK SOUND ================= */
+const clickSound = document.getElementById("clickSound");
+function playClickSound() {
+  if (!clickSound) return;
+  clickSound.currentTime = 0;
+  clickSound.play();
+}
+document.getElementById("submit").addEventListener("click", playClickSound);
+document.getElementById("copy").addEventListener("click", playClickSound);
+
+/* ===== Infinite Slow Typing ===== */
+const waText = "Hi there";
+const waTarget = document.getElementById("waTyping");
+let waIndex = 0;
+function typeEffect() {
+  if (waIndex <= waText.length) {
+    waTarget.textContent = waText.slice(0, waIndex);
+    waIndex++;
+  } else {
+    setTimeout(() => { waIndex = 0; waTarget.textContent = ""; }, 1200);
+  }
+}
+setInterval(typeEffect, 220);
+
+/* ❌ Disable right click and text selection */
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("selectstart", e => e.preventDefault());
+
+/* ================= LIGHT BULBS EFFECT ================= */
+const bulbs = document.querySelectorAll(".bulb");
+let index = 0;
+function chasingLights() {
+  bulbs.forEach(b => b.classList.remove("active"));
+  bulbs[index].classList.add("active");
+  index = (index + 1) % bulbs.length;
+  setTimeout(chasingLights, 650);
+}
+chasingLights();
 </script>
 </body>
 </html> 
