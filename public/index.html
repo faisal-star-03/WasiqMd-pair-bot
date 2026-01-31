@@ -934,6 +934,34 @@ document.querySelectorAll(".toggle-option").forEach(btn => {
     }
   });
 });
+  setInterval(typeEffect, 220); // 👈 که نور slow غواړې: 260 / 300
+// ❌ Disable right click
+document.addEventListener("contextmenu", e => {
+  e.preventDefault();
+});
+
+// ❌ Disable text selection via mouse
+document.addEventListener("selectstart", e => {
+  e.preventDefault();
+});
+const bulbs = document.querySelectorAll(".bulb");
+
+let index = 0;
+function chasingLights() {
+  // ټول څراغونه خاموش کړئ
+  bulbs.forEach(b => b.classList.remove("active"));
+
+  // اوسنی څراغ روشن کړئ
+  bulbs[index].classList.add("active");
+
+  // بل څراغ ته لاړ شئ
+  index = (index + 1) % bulbs.length;
+
+  setTimeout(chasingLights, 650    ); // ۲۰۰ms سرعت، که غواړې تیزه شي: کم یې کړه
+}
+
+// شروع افیکت
+chasingLights(); 
 </script>
 </body>
 </html> 
