@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 // Importing the modules
-import pairRouter from './pair.js';
+import pairRouter from './api/pair.js';
 import qrRouter from './qr.js';
 import QRCode from 'qrcode';
 
@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'pair.html'));
 });
 
-app.use('/pair', pairRouter);
+app.use('/api/pair', pairRouter);
 app.use('/qr', qrRouter);
 
 app.listen(PORT, () => {
