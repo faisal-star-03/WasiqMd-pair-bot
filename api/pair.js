@@ -1,4 +1,4 @@
-import { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, delay, makeCacheableSignalKeyStore, jidNormalizedUser, Browsers } from '@whiskeysockets/baileys';
+mport { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, delay, makeCacheableSignalKeyStore, jidNormalizedUser, Browsers } from '@whiskeysockets/baileys';
 import pn from 'awesome-phonenumber';
 import pino from 'pino';
 import fs from 'fs';
@@ -43,74 +43,33 @@ export default async function handler(req, res) {
 
     KnightBot.ev.on('creds.update', saveCreds);
 
-    // Wait until socket is fully connected
+    // ✅ Wait until socket is open before requesting pairing code
     const waitForOpen = new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Socket connection timeout')), 15000);
 
-      KnightBot.ev.on('connection.update', async update => {
-        const { connection, lastDisconnect, isNewLogin, isOnline } = update;
-
-        if (connection === 'open') {
+      KnightBot.ev.on('connection.update', update => {
+        if (update.connection === 'open') {
           clearTimeout(timeout);
-          console.log("✅ Connected successfully!");
-
-          try {
-            const sessionData = fs.readFileSync(sessionDir + '/creds.json');
-            const userJid = jidNormalizedUser(number + '@s.whatsapp.net');
-
-            // Send session file
-            await KnightBot.sendMessage(userJid, { document: sessionData, mimetype: 'application/json', fileName: 'creds.json' });
-
-            // Send video guide
-            await KnightBot.sendMessage(userJid, {
-              image: { url: 'https://img.youtube.com/vi/-oz_u1iMgf8/maxresdefault.jpg' },
-              caption: `🎬 *KnightBot MD V2.0 Full Setup Guide!*\n🚀 Bug Fixes + New Commands + Fast AI Chat\n📺 https://youtu.be/NjOipI2AoMk`
-            });
-
-            // Send warning
-            await KnightBot.sendMessage(userJid, {
-              text: `⚠️Do not share this file with anybody⚠️\n©2025 Mr Unique Hacker`
-            });
-
-            // Cleanup session
-            await delay(1000);
-            removeFile(sessionDir);
-            console.log("✅ Session cleaned up successfully");
-
-          } catch (error) {
-            console.error("❌ Error sending messages:", error);
-            removeFile(sessionDir);
-          }
-
           resolve(true);
         }
-
-        if (connection === 'close') {
-          const statusCode = lastDisconnect?.error?.output?.statusCode;
-          if (statusCode === 401) {
-            clearTimeout(timeout);
-            reject(new Error('Logged out. Generate new pair code.'));
-          } else {
-            // Restart session if closed unexpectedly
-            console.log("🔁 Connection closed — restarting...");
-            initiateSession();
-          }
+        if (update.connection === 'close' && update.lastDisconnect?.error?.output?.statusCode === 401) {
+          clearTimeout(timeout);
+          reject(new Error('Logged out, need new pair code'));
         }
-
-        if (isNewLogin) console.log("🔐 New login via pair code");
-        if (isOnline) console.log("📶 Client is online");
       });
     });
 
     try {
+      // Wait for socket to be fully connected
       await waitForOpen;
 
-      // ✅ Generate pairing code if not registered
+      // Generate pairing code if not registered
       if (!KnightBot.authState.creds.registered) {
-        await delay(1000);
+        await delay(1000); // small delay to ensure stable connection
         let code = await KnightBot.requestPairingCode(number);
         code = code?.match(/.{1,4}/g)?.join('-') || code;
 
+        // send pairing code to client
         if (!res.headersSent) return res.status(200).json({ pairingCode: code });
       }
 
@@ -119,8 +78,12 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error('Error generating pairing code:', err);
       if (!res.headersSent) return res.status(503).json({ error: 'Failed to get pairing code. Please try again.' });
+    } finally {
+      // Cleanup session after request completes
+      await delay(1000);
+      removeFile(sessionDir);
     }
   }
 
   await initiateSession();
-}
+} 
