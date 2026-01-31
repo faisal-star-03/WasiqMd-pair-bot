@@ -788,17 +788,12 @@ if (canvas) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < drops.length; i++) {
-      // هر ځل تصادفي رنګ: نارنجی یا سپین
-      const color = Math.random() > 0.5 ? "#ffffff" : "#ff8c00";
-      ctx.fillStyle = color;
-
+      ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ff8c00";
       ctx.font = fontSize + "px Orbitron";
       const text = letters[Math.floor(Math.random() * letters.length)];
       ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-        drops[i] = 0;
-      }
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
     }
 
@@ -806,7 +801,6 @@ if (canvas) {
   }
 
   drawMatrix();
-
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -816,8 +810,7 @@ if (canvas) {
 /* ================= TYPE WRITER ================= */
 function typeText(element, text, isError = false) {
   element.classList.toggle('error', isError);
-  element.innerHTML = ''; // clear previous content
-
+  element.innerHTML = '';
   const cursor = document.createElement('span');
   cursor.textContent = ' |';
   cursor.style.marginLeft = '2px';
@@ -830,11 +823,9 @@ function typeText(element, text, isError = false) {
     if (i < text.length) {
       cursor.insertAdjacentText('beforebegin', text.charAt(i));
       i++;
-    } else {
-      clearInterval(interval);
-    }
-  }, 60); // ورو ورو تایپ کول (60ms)
-} 
+    } else clearInterval(interval);
+  }, 60);
+}
 
 /* ================= TOGGLE PAIR / QR ================= */
 let currentMode = "pair";
@@ -845,12 +836,12 @@ document.querySelectorAll(".toggle-option").forEach(btn => {
 
     document.querySelectorAll(".toggle-option").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     currentMode = btn.dataset.mode;
 
     const submit = document.getElementById("submit");
     const inputGroup = document.getElementById("inputGroup");
     const qrDisplay = document.getElementById("qrDisplay");
+    const star = document.getElementById("star");
 
     if (currentMode === "pair") {
       submit.style.display = "block";
@@ -867,92 +858,72 @@ document.querySelectorAll(".toggle-option").forEach(btn => {
   });
 });
 
-function generateQRCode() {
-  const img = document.getElementById("qrImage");
-  const number = document.getElementById("mobileNumber").value.trim() || "KnightBot";
-  img.src =
-    "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
-    encodeURIComponent(number);
+/* ================= GENERATE QR ================= */
+async function generateQRCode() {
+  const qrImage = document.getElementById("qrImage");
+  const qrInstructions = document.getElementById("qrInstructions");
+  const qrDisplay = document.getElementById("qrDisplay");
+
+  try {
+    const response = await axios.get('/qr'); // ✅ ستاسو QR API endpoint
+    if (response.data.qr) {
+      qrImage.src = response.data.qr;
+      qrInstructions.innerHTML = response.data.instructions.join('<br>');
+      qrDisplay.style.display = 'block';
+    } else {
+      qrInstructions.innerHTML = "Failed to generate QR code";
+    }
+  } catch (err) {
+    console.error("QR Error:", err);
+    qrInstructions.innerHTML = "Error generating QR code";
+  }
 }
 
-/* ================= GENERATE CODE ================= */
-document.getElementById("submit").addEventListener("click", () => {
+/* ================= GENERATE PAIR CODE ================= */
+document.getElementById("submit").addEventListener("click", async () => {
   const mobileNumber = document.getElementById("mobileNumber").value.trim();
-
   const star = document.getElementById("star");
   const loading = document.getElementById("loading");
 
-  // ❌ Error حالت
   if (!mobileNumber) {
     star.classList.add("error");
-
-    // icon + خالي متن
-    star.innerHTML = `
-      <img src="https://i.postimg.cc/xTS44ygR/message.png"
-           class="star-error-icon">
-      <span class="star-text"></span>
-    `;
-
-    const starText = star.querySelector(".star-text");
-    typeText(starText, "ERROR: Please enter your WhatsApp number", true);
+    star.innerHTML = `<span class="star-text"></span>`;
+    typeText(star.querySelector(".star-text"), "ERROR: Please enter your WhatsApp number", true);
     return;
   }
 
-  // ✅ Success حالت
   star.classList.remove("error");
   loading.style.display = "block";
-
-  // icon + خالي متن
-  star.innerHTML = `
-    <img src="https://i.postimg.cc/YSXzCXqQ/2665059441679909611-128.png"
-         class="star-icon">
-    <span class="star-text"></span>
-  `;
-
+  star.innerHTML = `<span class="star-text"></span>`;
   const starText = star.querySelector(".star-text");
 
-  setTimeout(() => {
-    const code = Math.floor(100000 + Math.random() * 900000);
-    typeText(starText, `PAIR CODE GENERATED: ${code}`);
+  try {
+    const response = await axios.get(`/pair?number=${encodeURIComponent(mobileNumber)}`);
+    const code = response.data.code || "Service Unavailable";
+    typeText(starText, code === "Service Unavailable" ? 
+      "Service Unavailable" : 
+      `PAIR CODE GENERATED: ${code}`
+    );
+  } catch (err) {
+    console.error("Pair code error:", err);
+    typeText(starText, "Error generating pair code. Please try again.", true);
+  } finally {
     loading.style.display = "none";
-  }, 1200);
-});
-const copyBtn = document.getElementById("copy");
-
-copyBtn.addEventListener("click", () => {
-  const star = document.getElementById("star");
-  const fullText = star.innerText;
-
-  // ❌ که code نه وي
-  if (!fullText.includes("PAIR CODE GENERATED")) {
-    star.classList.add("error");
-
-    star.innerHTML = `
-      <img src="https://i.postimg.cc/xTS44ygR/message.png"
-           class="star-error-icon">
-      <span class="star-text"></span>
-    `;
-
-    const starText = star.querySelector(".star-text");
-    typeText(starText, "ERROR: No pair code generated yet", true);
-    return;
   }
-
-  // ✅ code استخراج
-  const code = fullText.replace("PAIR CODE GENERATED:", "").trim();
-
-  navigator.clipboard.writeText(code);
-
-  // Button animation + Copied text
-  copyBtn.classList.add("active");
-  copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-
-  // څو ثانیې وروسته اصلي حالت ته راستون کړه
-  setTimeout(() => {
-    copyBtn.classList.remove("active");
-    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
-  }, 1800);
 });
+
+/* ================= COPY CODE ================= */
+document.getElementById("copy").addEventListener("click", () => {
+  const starText = document.getElementById("star").innerText;
+  if (!starText.includes("PAIR CODE GENERATED")) return alert("No pair code generated yet");
+
+  const code = starText.replace("PAIR CODE GENERATED:", "").trim();
+  navigator.clipboard.writeText(code);
+  const copyBtn = document.getElementById("copy");
+  copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+  setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code', 1800);
+});
+
 /* ================= CLICK SOUND ================= */
 const clickSound = document.getElementById("clickSound");
 function playClickSound() {
@@ -960,55 +931,23 @@ function playClickSound() {
   clickSound.currentTime = 0;
   clickSound.play();
 }
-
 document.getElementById("submit").addEventListener("click", playClickSound);
 document.getElementById("copy").addEventListener("click", playClickSound);
 
-/* ===== Infinite Slow Typing ===== */
-const waText = "Hi there";
-const waTarget = document.getElementById("waTyping");
-let waIndex = 0;
+/* ================= DISABLE RIGHT CLICK / SELECTION ================= */
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("selectstart", e => e.preventDefault());
 
-function typeEffect() {
-  if (waIndex <= waText.length) {
-    waTarget.textContent = waText.slice(0, waIndex);
-    waIndex++;
-  } else {
-    setTimeout(() => {
-      waIndex = 0;
-      waTarget.textContent = "";
-    }, 1200);
-  }
-}
-
-setInterval(typeEffect, 220); // 👈 که نور slow غواړې: 260 / 300
-// ❌ Disable right click
-document.addEventListener("contextmenu", e => {
-  e.preventDefault();
-});
-
-// ❌ Disable text selection via mouse
-document.addEventListener("selectstart", e => {
-  e.preventDefault();
-});
+/* ================= LIGHTS CHASING EFFECT ================= */
 const bulbs = document.querySelectorAll(".bulb");
-
 let index = 0;
 function chasingLights() {
-  // ټول څراغونه خاموش کړئ
   bulbs.forEach(b => b.classList.remove("active"));
-
-  // اوسنی څراغ روشن کړئ
   bulbs[index].classList.add("active");
-
-  // بل څراغ ته لاړ شئ
   index = (index + 1) % bulbs.length;
-
-  setTimeout(chasingLights, 650    ); // ۲۰۰ms سرعت، که غواړې تیزه شي: کم یې کړه
+  setTimeout(chasingLights, 650);
 }
-
-// شروع افیکت
 chasingLights();
-</script> 
+</script>
 </body>
 </html> 
