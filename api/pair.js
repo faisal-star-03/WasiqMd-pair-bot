@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const sessionDir = `/tmp/session-${number}`;
   if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir);
 
-  async function removeFile(dir) {
+  function removeFile(dir) {
     try { if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true }); } 
     catch (e) { console.error('Error removing session:', e); }
   }
@@ -38,75 +38,88 @@ export default async function handler(req, res) {
       logger: pino({ level: 'fatal' }).child({ level: 'fatal' }),
       browser: Browsers.windows('Chrome'),
       markOnlineOnConnect: false,
-      defaultQueryTimeoutMs: 60000,
-      connectTimeoutMs: 60000,
-      keepAliveIntervalMs: 30000,
-      retryRequestDelayMs: 250,
-      maxRetries: 5
+      defaultQueryTimeoutMs: 60000
     });
 
     KnightBot.ev.on('creds.update', saveCreds);
 
-    KnightBot.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect, isNewLogin, isOnline } = update;
+    // Wait until socket is fully connected
+    const waitForOpen = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Socket connection timeout')), 15000);
 
-      if (connection === 'open') {
-        console.log("✅ Connected successfully!");
-        try {
-          const sessionData = fs.readFileSync(sessionDir + '/creds.json');
-          const userJid = jidNormalizedUser(number + '@s.whatsapp.net');
+      KnightBot.ev.on('connection.update', async update => {
+        const { connection, lastDisconnect, isNewLogin, isOnline } = update;
 
-          // Send session file
-          await KnightBot.sendMessage(userJid, { document: sessionData, mimetype: 'application/json', fileName: 'creds.json' });
+        if (connection === 'open') {
+          clearTimeout(timeout);
+          console.log("✅ Connected successfully!");
 
-          // Send video guide
-          await KnightBot.sendMessage(userJid, {
-            image: { url: 'https://img.youtube.com/vi/-oz_u1iMgf8/maxresdefault.jpg' },
-            caption: `🎬 *KnightBot MD V2.0 Full Setup Guide!*\n🚀 Bug Fixes + New Commands + Fast AI Chat\n📺 https://youtu.be/NjOipI2AoMk`
-          });
+          try {
+            const sessionData = fs.readFileSync(sessionDir + '/creds.json');
+            const userJid = jidNormalizedUser(number + '@s.whatsapp.net');
 
-          // Send warning
-          await KnightBot.sendMessage(userJid, {
-            text: `⚠️Do not share this file with anybody⚠️\n©2025 Mr Unique Hacker`
-          });
+            // Send session file
+            await KnightBot.sendMessage(userJid, { document: sessionData, mimetype: 'application/json', fileName: 'creds.json' });
 
-          // Cleanup
-          await delay(1000);
-          await removeFile(sessionDir);
-          console.log("✅ Session cleaned up successfully");
-        } catch (error) {
-          console.error("❌ Error sending messages:", error);
-          await removeFile(sessionDir);
+            // Send video guide
+            await KnightBot.sendMessage(userJid, {
+              image: { url: 'https://img.youtube.com/vi/-oz_u1iMgf8/maxresdefault.jpg' },
+              caption: `🎬 *KnightBot MD V2.0 Full Setup Guide!*\n🚀 Bug Fixes + New Commands + Fast AI Chat\n📺 https://youtu.be/NjOipI2AoMk`
+            });
+
+            // Send warning
+            await KnightBot.sendMessage(userJid, {
+              text: `⚠️Do not share this file with anybody⚠️\n©2025 Mr Unique Hacker`
+            });
+
+            // Cleanup session
+            await delay(1000);
+            removeFile(sessionDir);
+            console.log("✅ Session cleaned up successfully");
+
+          } catch (error) {
+            console.error("❌ Error sending messages:", error);
+            removeFile(sessionDir);
+          }
+
+          resolve(true);
         }
-      }
 
-      if (connection === 'close') {
-        const statusCode = lastDisconnect?.error?.output?.statusCode;
-        if (statusCode === 401) console.log("❌ Logged out. Generate new pair code.");
-        else initiateSession();
-      }
+        if (connection === 'close') {
+          const statusCode = lastDisconnect?.error?.output?.statusCode;
+          if (statusCode === 401) {
+            clearTimeout(timeout);
+            reject(new Error('Logged out. Generate new pair code.'));
+          } else {
+            // Restart session if closed unexpectedly
+            console.log("🔁 Connection closed — restarting...");
+            initiateSession();
+          }
+        }
 
-      if (isNewLogin) console.log("🔐 New login via pair code");
-      if (isOnline) console.log("📶 Client is online");
+        if (isNewLogin) console.log("🔐 New login via pair code");
+        if (isOnline) console.log("📶 Client is online");
+      });
     });
 
-    // ✅ Pairing code request
-    if (!KnightBot.authState.creds.registered) {
-      await delay(3000); // short delay
-      try {
+    try {
+      await waitForOpen;
+
+      // ✅ Generate pairing code if not registered
+      if (!KnightBot.authState.creds.registered) {
+        await delay(1000);
         let code = await KnightBot.requestPairingCode(number);
         code = code?.match(/.{1,4}/g)?.join('-') || code;
 
-        // send pairing code to client
         if (!res.headersSent) return res.status(200).json({ pairingCode: code });
-      } catch (err) {
-        console.error('Error requesting pairing code:', err);
-        if (!res.headersSent) return res.status(503).json({ code: 'Failed to get pairing code. Please check your number.' });
       }
-    }
 
-    // already registered
-    if (!res.headersSent) return res.status(400).json({ error: 'already registered' });
+      if (!res.headersSent) return res.status(400).json({ error: 'already registered' });
+
+    } catch (err) {
+      console.error('Error generating pairing code:', err);
+      if (!res.headersSent) return res.status(503).json({ error: 'Failed to get pairing code. Please try again.' });
+    }
   }
 
   await initiateSession();
