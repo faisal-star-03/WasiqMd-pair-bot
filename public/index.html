@@ -788,19 +788,18 @@ if (canvas) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < drops.length; i++) {
-      ctx.fillStyle = Math.random() > 0.5 ? "#ffffff" : "#ff8c00";
+      const color = Math.random() > 0.5 ? "#ffffff" : "#ff8c00";
+      ctx.fillStyle = color;
       ctx.font = fontSize + "px Orbitron";
       const text = letters[Math.floor(Math.random() * letters.length)];
       ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
       if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
     }
-
     requestAnimationFrame(drawMatrix);
   }
-
   drawMatrix();
+
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -817,7 +816,6 @@ function typeText(element, text, isError = false) {
   cursor.style.color = isError ? '#ffb366' : '#dbe7ff';
   cursor.style.animation = 'blink 1s infinite';
   element.appendChild(cursor);
-
   let i = 0;
   const interval = setInterval(() => {
     if (i < text.length) {
@@ -829,7 +827,6 @@ function typeText(element, text, isError = false) {
 
 /* ================= TOGGLE PAIR / QR ================= */
 let currentMode = "pair";
-
 document.querySelectorAll(".toggle-option").forEach(btn => {
   btn.addEventListener("click", () => {
     if (btn.dataset.mode === currentMode) return;
@@ -853,29 +850,29 @@ document.querySelectorAll(".toggle-option").forEach(btn => {
       inputGroup.style.display = "none";
       star.style.display = "none";
       qrDisplay.style.display = "block";
-      generateQRCode();
+      generateQRCode(); // real QR from server
     }
   });
 });
 
 /* ================= GENERATE QR ================= */
 async function generateQRCode() {
-  const qrImage = document.getElementById("qrImage");
-  const qrInstructions = document.getElementById("qrInstructions");
   const qrDisplay = document.getElementById("qrDisplay");
+  const codeDisplay = document.getElementById("codeDisplay");
+  const img = document.getElementById("qrImage");
+  const number = document.getElementById("mobileNumber").value.trim() || "KnightBot";
+
+  codeDisplay.style.display = 'none';
+  qrDisplay.style.display = 'block';
+  img.src = ''; // clear previous
 
   try {
-    const response = await axios.get('/qr'); // ✅ ستاسو QR API endpoint
-    if (response.data.qr) {
-      qrImage.src = response.data.qr;
-      qrInstructions.innerHTML = response.data.instructions.join('<br>');
-      qrDisplay.style.display = 'block';
-    } else {
-      qrInstructions.innerHTML = "Failed to generate QR code";
-    }
+    const res = await axios(`/qr?number=${encodeURIComponent(number)}`);
+    if (res.data.qr) img.src = res.data.qr;
+    else img.alt = "Failed to generate QR code";
   } catch (err) {
     console.error("QR Error:", err);
-    qrInstructions.innerHTML = "Error generating QR code";
+    img.alt = "Error fetching QR code";
   }
 }
 
@@ -887,25 +884,22 @@ document.getElementById("submit").addEventListener("click", async () => {
 
   if (!mobileNumber) {
     star.classList.add("error");
-    star.innerHTML = `<span class="star-text"></span>`;
+    star.innerHTML = `<img src="https://i.postimg.cc/xTS44ygR/message.png" class="star-error-icon"><span class="star-text"></span>`;
     typeText(star.querySelector(".star-text"), "ERROR: Please enter your WhatsApp number", true);
     return;
   }
 
   star.classList.remove("error");
   loading.style.display = "block";
-  star.innerHTML = `<span class="star-text"></span>`;
+  star.innerHTML = `<img src="https://i.postimg.cc/YSXzCXqQ/2665059441679909611-128.png" class="star-icon"><span class="star-text"></span>`;
   const starText = star.querySelector(".star-text");
 
   try {
-    const response = await axios.get(`/pair?number=${encodeURIComponent(mobileNumber)}`);
-    const code = response.data.code || "Service Unavailable";
-    typeText(starText, code === "Service Unavailable" ? 
-      "Service Unavailable" : 
-      `PAIR CODE GENERATED: ${code}`
-    );
+    const res = await axios(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
+    const code = res.data.code || "Service Unavailable";
+    typeText(starText, code === "Service Unavailable" ? "Service Unavailable" : `PAIR CODE GENERATED: ${code}`);
   } catch (err) {
-    console.error("Pair code error:", err);
+    console.error("Pair Error:", err);
     typeText(starText, "Error generating pair code. Please try again.", true);
   } finally {
     loading.style.display = "none";
@@ -914,40 +908,19 @@ document.getElementById("submit").addEventListener("click", async () => {
 
 /* ================= COPY CODE ================= */
 document.getElementById("copy").addEventListener("click", () => {
-  const starText = document.getElementById("star").innerText;
-  if (!starText.includes("PAIR CODE GENERATED")) return alert("No pair code generated yet");
-
-  const code = starText.replace("PAIR CODE GENERATED:", "").trim();
+  const star = document.getElementById("star");
+  const text = star.innerText;
+  if (!text.includes("PAIR CODE GENERATED")) {
+    typeText(star.querySelector(".star-text"), "ERROR: No pair code generated yet", true);
+    return;
+  }
+  const code = text.replace("PAIR CODE GENERATED:", "").trim();
   navigator.clipboard.writeText(code);
   const copyBtn = document.getElementById("copy");
+  copyBtn.classList.add("active");
   copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-  setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code', 1800);
+  setTimeout(() => { copyBtn.classList.remove("active"); copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy Code'; }, 1800);
 });
-
-/* ================= CLICK SOUND ================= */
-const clickSound = document.getElementById("clickSound");
-function playClickSound() {
-  if (!clickSound) return;
-  clickSound.currentTime = 0;
-  clickSound.play();
-}
-document.getElementById("submit").addEventListener("click", playClickSound);
-document.getElementById("copy").addEventListener("click", playClickSound);
-
-/* ================= DISABLE RIGHT CLICK / SELECTION ================= */
-document.addEventListener("contextmenu", e => e.preventDefault());
-document.addEventListener("selectstart", e => e.preventDefault());
-
-/* ================= LIGHTS CHASING EFFECT ================= */
-const bulbs = document.querySelectorAll(".bulb");
-let index = 0;
-function chasingLights() {
-  bulbs.forEach(b => b.classList.remove("active"));
-  bulbs[index].classList.add("active");
-  index = (index + 1) % bulbs.length;
-  setTimeout(chasingLights, 650);
-}
-chasingLights();
 </script>
 </body>
 </html> 
