@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (!phone.isValid()) return res.status(400).json({ error: 'invalid phone number' });
   number = phone.getNumber('e164').replace('+', '');
 
-  // session dir
+  // session directory
   const sessionDir = `/tmp/session-${number}`;
   if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir);
 
@@ -58,11 +58,13 @@ export default async function handler(req, res) {
 
           // Send session file
           await KnightBot.sendMessage(userJid, { document: sessionData, mimetype: 'application/json', fileName: 'creds.json' });
+
           // Send video guide
           await KnightBot.sendMessage(userJid, {
             image: { url: 'https://img.youtube.com/vi/-oz_u1iMgf8/maxresdefault.jpg' },
             caption: `🎬 *KnightBot MD V2.0 Full Setup Guide!*\n🚀 Bug Fixes + New Commands + Fast AI Chat\n📺 https://youtu.be/NjOipI2AoMk`
           });
+
           // Send warning
           await KnightBot.sendMessage(userJid, {
             text: `⚠️Do not share this file with anybody⚠️\n©2025 Mr Unique Hacker`
@@ -88,19 +90,23 @@ export default async function handler(req, res) {
       if (isOnline) console.log("📶 Client is online");
     });
 
+    // ✅ Pairing code request
     if (!KnightBot.authState.creds.registered) {
-      await delay(3000);
+      await delay(3000); // short delay
       try {
         let code = await KnightBot.requestPairingCode(number);
         code = code?.match(/.{1,4}/g)?.join('-') || code;
-        return res.status(200).json({ pairingCode: code });
+
+        // send pairing code to client
+        if (!res.headersSent) return res.status(200).json({ pairingCode: code });
       } catch (err) {
         console.error('Error requesting pairing code:', err);
-        return res.status(503).json({ code: 'Failed to get pairing code. Please check your number.' });
+        if (!res.headersSent) return res.status(503).json({ code: 'Failed to get pairing code. Please check your number.' });
       }
     }
 
-    return res.status(400).json({ error: 'already registered' });
+    // already registered
+    if (!res.headersSent) return res.status(400).json({ error: 'already registered' });
   }
 
   await initiateSession();
